@@ -40,7 +40,8 @@ for hour_word in hours_words:
 
   time_correspondance["quarter past " + hour_word] = f"{word_hour_to_number[hour_word]}:15"
   time_correspondance["half past " + hour_word] = f"{word_hour_to_number[hour_word]}:30"
-  time_correspondance["quarter to " + hour_word] = f"{int(word_hour_to_number[hour_word]) - 1}:45"
+  
+  time_correspondance["quarter to " + hour_word] = f"{int(word_hour_to_number[hour_word])-1:02}:45"
 
 def get_realtime_from_clock(clocktime):
   clocktime = clocktime.lower()
