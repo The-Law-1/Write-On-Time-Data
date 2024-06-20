@@ -17,8 +17,8 @@ minutes_words = ["one", "two", "three", "four", "five", "six", "seven", "eight",
                  "forty-eight", "forty-nine", "fifty", "fifty-one", "fifty-two", "fifty-three", "fifty-four", 
                  "fifty-five", "fifty-six", "fifty-seven", "fifty-eight", "fifty-nine"]
 
-word_hour_to_number = {word: str(i+1) for i, word in enumerate(hours_words)}
-word_minute_to_number = {word: str(i+1) for i, word in enumerate(minutes_words)}
+word_hour_to_number = {word: ("0" + str(i + 1) if i + 1 < 10 else str(i + 1)) for i, word in enumerate(hours_words)}
+word_minute_to_number = {word: ("0" + str(i + 1) if i + 1 < 10 else str(i + 1)) for i, word in enumerate(minutes_words)}
 
 # generate all possible times
 for hour in range(24):
@@ -43,6 +43,7 @@ for hour_word in hours_words:
   time_correspondance["quarter to " + hour_word] = f"{int(word_hour_to_number[hour_word]) - 1}:45"
 
 def get_realtime_from_clock(clocktime):
+  clocktime = clocktime.lower()
   if (clocktime in time_correspondance):
     return time_correspondance[clocktime]
   return ""
