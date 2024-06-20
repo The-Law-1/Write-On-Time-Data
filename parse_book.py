@@ -18,6 +18,11 @@ with open(argv[1], "r") as f:
       text = f.read()
       
       splitInfo = text.split("*** START OF THE PROJECT GUTENBERG EBOOK")
+      if (len(splitInfo) == 1):
+        print("Splitting with different pattern")
+        splitInfo = text.split("*** START OF THIS PROJECT GUTENBERG EBOOK")
+
+      print("Len of splitInfo: ", len(splitInfo))
       info = splitInfo[0]
       
       # match this info from info
