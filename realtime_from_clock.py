@@ -29,7 +29,10 @@ for hour in range(24):
 for hour_word in hours_words:
   for minute_word in minutes_words:
     time_correspondance[f"{minute_word} minute{'s' if minute_word != 'one' else ''} past {hour_word}"] = f"{word_hour_to_number[hour_word]}:{word_minute_to_number[minute_word]}"
-    time_correspondance[f"{minute_word} minute{'s' if minute_word != 'one' else ''} before {hour_word}"] = f"{word_hour_to_number[hour_word]}:{word_minute_to_number[minute_word]}"
+    
+    previous_hour = int(word_hour_to_number[hour_word]) - 1 if int(word_hour_to_number[hour_word]) > 1 else 12
+    previous_minute = 60 - int(word_minute_to_number[minute_word]) if int(word_minute_to_number[minute_word]) != 0 else 0
+    time_correspondance[f"{minute_word} minute{'s' if minute_word != 'one' else ''} before {hour_word}"] = f"{previous_hour:02}:{previous_minute:02}"
 
   time_correspondance[hour_word + " o'clock"] = f"{word_hour_to_number[hour_word]}:00"
   time_correspondance[hour_word + " o’clock"] = f"{word_hour_to_number[hour_word]}:00"
