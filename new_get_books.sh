@@ -13,7 +13,7 @@ generate_url() {
     echo $url
 }
 
-for i in {9602..10000}
+for i in {16647..20000}
 do
   # http://aleph.gutenberg.org/1/2/3/7/12370/12370.zip
   URL=$(generate_url $i)
