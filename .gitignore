@@ -5,4 +5,5 @@ wget_errors.log
 times.csv
 new_books
 old
-commands
+commands.txt
+missing_times.txt
