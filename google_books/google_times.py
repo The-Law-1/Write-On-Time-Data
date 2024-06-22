@@ -27,15 +27,28 @@ for hour in range(0, 13):
       time_to_before_expression[time] = f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 1 else ''}+before+{hours_words[hour + 1]}"
 
 
-#  https://www.googleapis.com/books/v1/volumes?q="three+minutes+past+midnight"+subject:"fiction"&filter=free-ebooks
-def search_google_books(time_str):
+#  https://www.googleapis.com/books/v1/volumes?q="three+minutes+past+midnight"+subject:fiction&filter=partial&maxResults=40&printType=books
+def search_google_books(time_str, startIdx=0, maxResults=40):
 
-    url = f'https://www.googleapis.com/books/v1/volumes?q="{time_str}"&subject:fiction&filter=free-ebooks'
+    print("Searching for time: ", time_str)
+    # maximum results is 40, after that, you need to paginate with startIndex
+    url = f'https://www.googleapis.com/books/v1/volumes?q="{time_str}":subject:fiction&filter=partial&maxResults=40&printType=books'
     response = requests.get(url)
     books = response.json()
     results = []
 
     for item in books.get('items', []):
+      
+        # make sure the 'categories': ['Fiction']
+        categories = item['volumeInfo'].get('categories', [])
+        
+        # writing subject:fiction in the URL messes up the search and doesn't work
+        # if "Fiction" not in categories:
+        #   print("Skipping because it's not fiction: ", categories)
+        #   # if we have no results, and the first book's ID is different than the last iteration, recurse
+        #   # if (len(results) == 0 and (startIdx == 0 or ))
+        #   continue
+      
         title = item['volumeInfo'].get('title', 'No Title')
         authors = item['volumeInfo'].get('authors', ['No Author'])
         snippet = item.get('searchInfo', {}).get('textSnippet', 'No Snippet')
@@ -69,6 +82,11 @@ with open("missing_times.txt") as f:
         continue
       time = split_line[1]
       time = time.strip()
+      
+      # if the hours are over 12, skip. There are no lines for 13:00, 14:00, etc.
+      if time not in time_to_past_expression:
+        continue
+      
       time_past_expression = time_to_past_expression[time]
       
       book_clocks = []
