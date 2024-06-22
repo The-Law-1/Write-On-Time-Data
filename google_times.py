@@ -2,6 +2,7 @@
 
 import requests
 import html
+import time as TIME
 
 time_to_past_expression = {}
 time_to_before_expression = {}
@@ -53,6 +54,7 @@ def search_google_books(time_str):
  
         results.append({'title': title, 'snippet': snippet, 'preview_link': preview_link, "author": authors[0], "expression": time_str.replace("+", " ")})
 
+    TIME.sleep(1)
     return results
 
 
