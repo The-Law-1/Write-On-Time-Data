@@ -44,8 +44,10 @@ def get_sentence_from_snippet(snippet, title, time_str, curr_depth=0):
   snippet = snippet.replace("...", "")
   
   snippet = snippet.replace(" ", "+")
+
+  title = title.replace(" ", "+")
   
-  url = f'https://www.googleapis.com/books/v1/volumes?q=".*+{snippet}"+subject:fiction+title:{title}&filter=partial&maxResults=1&printType=books'
+  url = f'https://www.googleapis.com/books/v1/volumes?q=".*+{snippet}"+subject:fiction+intitle:{title}&filter=partial&maxResults=1&printType=books'
   response = requests.get(url)
   books = response.json()
   
@@ -65,7 +67,7 @@ def get_sentence_from_snippet(snippet, title, time_str, curr_depth=0):
     
     # match this regex (?<=\.\s)[^.]*your_pattern_here[^.]*\.(?=\s)
     print("Searching for snippet \n'" + time_str + "' in \n" + extendedSnippet)
-    match = re.search(rf'[^.?!]*{time_str}[^.?!]*', extendedSnippet)
+    match = re.search(rf'[^.?!]*{time_str}*[^.?!]*', extendedSnippet)
     if match != None:
       sentence = match.group(0)
       print(sentence)
