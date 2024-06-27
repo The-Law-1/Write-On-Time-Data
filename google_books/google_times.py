@@ -3,6 +3,7 @@
 import requests
 import html
 import time as TIME
+import re
 
 time_to_past_expression = {}
 time_to_before_expression = {}
@@ -27,12 +28,59 @@ for hour in range(0, 13):
       time_to_before_expression[time] = f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 1 else ''}+before+{hours_words[hour + 1]}"
 
 
+max_depth = 10
+
+def get_sentence_from_snippet(snippet, title, time_str, curr_depth=0):
+  
+  if (curr_depth > max_depth):
+    return ""
+
+  # remove html tags from snippet
+  snippet = snippet.replace("<b>", "").replace("</b>", "")
+  
+  snippet = html.unescape(snippet)
+  
+  # remove ... from snippet
+  snippet = snippet.replace("...", "")
+  
+  snippet = snippet.replace(" ", "+")
+  
+  url = f'https://www.googleapis.com/books/v1/volumes?q=".*+{snippet}"+subject:fiction+title:{title}&filter=partial&maxResults=1&printType=books'
+  response = requests.get(url)
+  books = response.json()
+  
+  
+  for item in books.get('items', []):
+    
+    extendedSnippet = item.get('searchInfo', {}).get('textSnippet', 'No Snippet')
+    extendedSnippet = extendedSnippet.replace(" - ", "-")
+
+    # remove html tags from snippet
+    extendedSnippet = extendedSnippet.replace("...", "")
+    extendedSnippet = extendedSnippet.replace("<b>", "").replace("</b>", "")
+    extendedSnippet = html.unescape(extendedSnippet)
+    
+    if extendedSnippet == "No Snippet":
+      return ""
+    
+    # match this regex (?<=\.\s)[^.]*your_pattern_here[^.]*\.(?=\s)
+    print("Searching for snippet \n'" + time_str + "' in \n" + extendedSnippet)
+    match = re.search(rf'[^.?!]*{time_str}[^.?!]*', extendedSnippet)
+    if match != None:
+      sentence = match.group(0)
+      print(sentence)
+      return sentence
+    else:
+      TIME.sleep(1)
+      return get_sentence_from_snippet(extendedSnippet, title, time_str, curr_depth + 1)
+
+
 #  https://www.googleapis.com/books/v1/volumes?q="three+minutes+past+midnight"+subject:fiction&filter=partial&maxResults=40&printType=books
 def search_google_books(time_str, startIdx=0, maxResults=40):
 
     print("Searching for time: ", time_str)
     # maximum results is 40, after that, you need to paginate with startIndex
-    url = f'https://www.googleapis.com/books/v1/volumes?q="{time_str}":subject:fiction&filter=partial&maxResults=40&printType=books'
+    url = f'https://www.googleapis.com/books/v1/volumes?q=".*+{time_str}"+subject:fiction&filter=partial&maxResults={maxResults}&printType=books'
     response = requests.get(url)
     books = response.json()
     results = []
@@ -41,22 +89,11 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
       
         # make sure the 'categories': ['Fiction']
         categories = item['volumeInfo'].get('categories', [])
-        
-        # writing subject:fiction in the URL messes up the search and doesn't work
-        # if "Fiction" not in categories:
-        #   print("Skipping because it's not fiction: ", categories)
-        #   # if we have no results, and the first book's ID is different than the last iteration, recurse
-        #   # if (len(results) == 0 and (startIdx == 0 or ))
-        #   continue
-      
+
         title = item['volumeInfo'].get('title', 'No Title')
         authors = item['volumeInfo'].get('authors', ['No Author'])
         snippet = item.get('searchInfo', {}).get('textSnippet', 'No Snippet')
         preview_link = item['volumeInfo'].get('previewLink', 'No Preview Link')
-        
-        # remove html tags from snippet
-        snippet = snippet.replace("<b>", "").replace("</b>", "")
-        snippet = html.unescape(snippet)
         
         time_str = time_str.replace("+", " ")
         
@@ -64,8 +101,13 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
         if (time_str not in snippet.lower()):
           print("Discarding", title, snippet, preview_link, authors[0], time_str)
           continue
+        
+        sentence = get_sentence_from_snippet(snippet, title, time_str)
+        if (sentence == None or len(sentence) == 0):
+          continue
+        print("Found sentence: ", sentence)
  
-        results.append({'title': title, 'snippet': snippet, 'preview_link': preview_link, "author": authors[0], "expression": time_str.replace("+", " ")})
+        results.append({'title': title, 'snippet': sentence, 'preview_link': preview_link, "author": authors[0], "expression": time_str.replace("+", " ")})
 
     TIME.sleep(1)
     return results
@@ -99,7 +141,7 @@ with open("missing_times.txt") as f:
       
       book_clocks.extend(book_clocks_past)
       
-      with open("google_times.csv", "a") as f2:
+      with open("new_google_times.csv", "a") as f2:
         for book in book_clocks:
 
           result_str = f"{time}|{book['snippet']}|{book['title']}|{book['preview_link']}|{book['author']}|{book['expression']}\n"
