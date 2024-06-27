@@ -64,16 +64,20 @@ def get_sentence_from_snippet(snippet, title, time_str, curr_depth=0):
     
     if extendedSnippet == "No Snippet":
       return ""
-    
+
+    extendedSnippet.replace(" .", ".")
+    extendedSnippet.replace(" ?", "?")
+    extendedSnippet.replace(" !", "!")
     # match this regex (?<=\.\s)[^.]*your_pattern_here[^.]*\.(?=\s)
     print("Searching for snippet \n'" + time_str + "' in \n" + extendedSnippet)
-    match = re.search(rf'[^.?!]*{time_str}*[^.?!]*', extendedSnippet)
+    # (?<=\.\s)[^.?!]*one minute past midnight[^.?!]*[.?!](?=\s)
+    match = re.search(rf'(?<=\.\s)[^.?!]*{time_str}[^.?!]*[.?!](?=\s)', extendedSnippet, re.IGNORECASE)
     if match != None:
       sentence = match.group(0)
-      print(sentence)
+      print("Found: ", sentence)
       return sentence
     else:
-      TIME.sleep(1)
+      TIME.sleep(0.1)
       return get_sentence_from_snippet(extendedSnippet, title, time_str, curr_depth + 1)
 
 
@@ -117,6 +121,8 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
 
 # results = search_google_books("three+minutes+past+midnight")
 # print(results)
+
+# get_sentence_from_snippet("one minute past midnight", "Without Fail", "one minute past midnight", 0)
 
 with open("missing_times.txt") as f:
     for line in f:
