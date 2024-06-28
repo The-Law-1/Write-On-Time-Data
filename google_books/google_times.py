@@ -30,16 +30,22 @@ for hour in range(0, 13):
       no_hyphen_minutes = minutes_words[minute - 1].replace("-", " ")
 
     time_to_past_expression[time].append(f"{minutes_words[minute - 1]}+minute{'s' if minute != 1 else ''}+past+{hours_words[hour]}")
+    time_to_past_expression[time].append(f"{minutes_words[minute - 1]}+minute{'s' if minute != 1 else ''}+after+{hours_words[hour]}")
 
     if (no_hyphen_minutes != ""):
       # time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+past+{hours_words[hour]}"
       time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+past+{hours_words[hour]}")
+      time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+after+{hours_words[hour]}")
+      
       if minute > 30:
         if (hour == 12):
           time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+before+{hours_words[1]}")
+          time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+to+{hours_words[1]}")
+          
           # time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[1]}"
         else:
           time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+before+{hours_words[hour + 1]}")
+          time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+to+{hours_words[hour + 1]}")
           # time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[hour + 1]}"
     
     if hour < 13 and minute > 30:
@@ -121,7 +127,7 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
     results = []
     
     starting_snippets = []
-
+    
     for item in books.get('items', []):
       
         # make sure the 'categories': ['Fiction']
@@ -160,10 +166,15 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
     return results
 
 
-# resultsA = search_google_books("twenty-one+minutes+past+midnight")
-# print(resultsA)
-# resultsB = search_google_books("twenty+one+minutes+past+midnight")
-# print(resultsB)
+# results = search_google_books("twenty-nine+minutes+past+midnight")
+# print(results)
+# results = search_google_books("twenty-nine+minutes+after+midnight")
+# print(results)
+
+# results = search_google_books("twenty+nine+minutes+past+midnight")
+# print(results)
+# results = search_google_books("twenty+nine+minutes+after+midnight")
+# print(results)
 
 # get_sentence_from_snippet("one minute past midnight", "Without Fail", "one minute past midnight", 0)
 
