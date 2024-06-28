@@ -21,9 +21,21 @@ minutes_words = ["one", "two", "three", "four", "five", "six", "seven", "eight",
 
 for hour in range(0, 13):
   for minute in range(1, 60):
-    time = f"{hour:02d}:{minute:02d}"  
+    time = f"{hour:02d}:{minute:02d}"      
     
+    no_hyphen_minutes = ""
+    if ("-" in minutes_words[minute - 1]):
+      no_hyphen_minutes = minutes_words[minute - 1].replace("-", " ")
+
     time_to_past_expression[time] = f"{minutes_words[minute - 1]}+minute{'s' if minute != 1 else ''}+past+{hours_words[hour]}"
+
+    if (no_hyphen_minutes != ""):
+      time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+past+{hours_words[hour]}"
+      if minute > 30:
+        if (hour == 12):
+          time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[1]}"
+        else:
+          time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[hour + 1]}"
     
     if hour < 13 and minute > 30:
       if (hour == 12):
@@ -34,20 +46,30 @@ for hour in range(0, 13):
 
 max_depth = 10
 
+def clean_snippet(snippet):
+  snippet = snippet.replace("<b>", "").replace("</b>", "")
+  snippet = html.unescape(snippet)
+  
+  snippet = snippet.replace("...", "")
+  
+  snippet = snippet.replace(" - ", "-")
+  snippet = snippet.replace("- ", "-")
+  snippet = snippet.replace(" -", "-")
+  
+  snippet = snippet.replace(" .", ".")
+  snippet = snippet.replace(" ?", "?")
+  snippet = snippet.replace(" !", "!")
+  
+  return snippet
+
 def get_sentence_from_snippet(snippet, title, time_str, curr_depth=0):
   
   if (curr_depth > max_depth):
     print("discarding", title, snippet, time_str)
     return ""
 
-  # remove html tags from snippet
-  snippet = snippet.replace("<b>", "").replace("</b>", "")
-  
-  snippet = html.unescape(snippet)
-  
-  # remove ... from snippet
-  snippet = snippet.replace("...", "")
-  
+  snippet = clean_snippet(snippet)
+
   snippet = snippet.replace(" ", "+")
 
   title = title.replace(" ", "+")
@@ -60,26 +82,16 @@ def get_sentence_from_snippet(snippet, title, time_str, curr_depth=0):
   for item in books.get('items', []):
     
     extendedSnippet = item.get('searchInfo', {}).get('textSnippet', 'No Snippet')
-    extendedSnippet = extendedSnippet.replace(" - ", "-")
-    extendedSnippet = extendedSnippet.replace("- ", "-")
-    extendedSnippet = extendedSnippet.replace(" -", "-")
     
-
-    # remove html tags from snippet
-    extendedSnippet = extendedSnippet.replace("...", "")
-    extendedSnippet = extendedSnippet.replace("<b>", "").replace("</b>", "")
-    extendedSnippet = html.unescape(extendedSnippet)
+    extendedSnippet = clean_snippet(extendedSnippet)
     
     if extendedSnippet == "No Snippet":
       return ""
 
-    extendedSnippet.replace(" .", ".")
-    extendedSnippet.replace(" ?", "?")
-    extendedSnippet.replace(" !", "!")
     # match this regex (?<=\.\s)[^.]*your_pattern_here[^.]*\.(?=\s)
     print("Searching for snippet \n'" + time_str + "' in \n" + extendedSnippet)
-    # (?<=[.?!])[^.?!]*seventeen minutes past four[^.?!]*[.?!](?=\s)
-    match = re.search(rf'(?<=[.?!])[^.?!]*{time_str}[^.?!]*[.?!](?=\s)', extendedSnippet, re.IGNORECASE)
+    # (?<=[.?!])[^.?!]*twenty four minutes past midnight.*?[.?!]
+    match = re.search(rf'(?<=[.?!])[^.?!]*{time_str}.*?[.?!]', extendedSnippet, re.IGNORECASE)
     if match != None:
       sentence = match.group(0)
       print("Found: ", sentence)
@@ -114,6 +126,8 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
         
         time_str = time_str.replace("+", " ")
         
+        snippet = clean_snippet(snippet)
+        
         if (snippet in starting_snippets):
           print("Skipping snippet because I've seen it")
           continue
@@ -122,6 +136,7 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
         starting_snippets.append(snippet)
         
         # if the snippet doesn't contain the time, discard it
+        # ! shouldn't really happen because it means google made a mistake
         if (time_str not in snippet.lower()):
           print("discarding", title, snippet, preview_link, authors[0], time_str)
           continue
@@ -137,8 +152,10 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
     return results
 
 
-# results = search_google_books("three+minutes+past+midnight")
-# print(results)
+# resultsA = search_google_books("twenty-four+minutes+past+midnight")
+# print(resultsA)
+# resultsB = search_google_books("twenty+four+minutes+past+midnight")
+# print(resultsB)
 
 # get_sentence_from_snippet("one minute past midnight", "Without Fail", "one minute past midnight", 0)
 
