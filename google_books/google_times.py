@@ -21,27 +21,35 @@ minutes_words = ["one", "two", "three", "four", "five", "six", "seven", "eight",
 
 for hour in range(0, 13):
   for minute in range(1, 60):
-    time = f"{hour:02d}:{minute:02d}"      
+    time = f"{hour:02d}:{minute:02d}"
+    
+    time_to_past_expression[time] = []
     
     no_hyphen_minutes = ""
     if ("-" in minutes_words[minute - 1]):
       no_hyphen_minutes = minutes_words[minute - 1].replace("-", " ")
 
-    time_to_past_expression[time] = f"{minutes_words[minute - 1]}+minute{'s' if minute != 1 else ''}+past+{hours_words[hour]}"
+    time_to_past_expression[time].append(f"{minutes_words[minute - 1]}+minute{'s' if minute != 1 else ''}+past+{hours_words[hour]}")
 
     if (no_hyphen_minutes != ""):
-      time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+past+{hours_words[hour]}"
+      # time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+past+{hours_words[hour]}"
+      time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+past+{hours_words[hour]}")
       if minute > 30:
         if (hour == 12):
-          time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[1]}"
+          time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+before+{hours_words[1]}")
+          # time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[1]}"
         else:
-          time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[hour + 1]}"
+          time_to_past_expression[time].append(f"{no_hyphen_minutes}+minutes+before+{hours_words[hour + 1]}")
+          # time_to_past_expression[time] = f"{no_hyphen_minutes}+minutes+before+{hours_words[hour + 1]}"
     
     if hour < 13 and minute > 30:
+      time_to_before_expression[time] = []
       if (hour == 12):
-        time_to_before_expression[time] = f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 59 else ''}+before+{hours_words[1]}"
+        time_to_before_expression[time].append(f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 59 else ''}+before+{hours_words[1]}")
+        # time_to_before_expression[time] = f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 59 else ''}+before+{hours_words[1]}"
       else:
-        time_to_before_expression[time] = f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 59 else ''}+before+{hours_words[hour + 1]}"
+        time_to_before_expression[time].append(f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 59 else ''}+before+{hours_words[hour + 1]}")
+        # time_to_before_expression[time] = f"{minutes_words[60 - minute - 1]}+minute{'s' if minute != 59 else ''}+before+{hours_words[hour + 1]}"
 
 
 max_depth = 10
@@ -152,9 +160,9 @@ def search_google_books(time_str, startIdx=0, maxResults=40):
     return results
 
 
-# resultsA = search_google_books("twenty-four+minutes+past+midnight")
+# resultsA = search_google_books("twenty-one+minutes+past+midnight")
 # print(resultsA)
-# resultsB = search_google_books("twenty+four+minutes+past+midnight")
+# resultsB = search_google_books("twenty+one+minutes+past+midnight")
 # print(resultsB)
 
 # get_sentence_from_snippet("one minute past midnight", "Without Fail", "one minute past midnight", 0)
@@ -174,18 +182,21 @@ with open("missing_times.txt") as f:
       # if the hours are over 12, skip. There are no lines for 13:00, 14:00, etc.
       if time not in time_to_past_expression:
         continue
-      
-      time_past_expression = time_to_past_expression[time]
+  
+      # since hyphens/non-hyphens, multiple expressions can be under one time format
+      time_past_expression_arr = time_to_past_expression[time]
       
       book_clocks = []
-      book_clocks_past = search_google_books(time_past_expression)
+      for time_past_expression in time_past_expression_arr:
+        book_clocks_past = search_google_books(time_past_expression)
+        book_clocks.extend(book_clocks_past)
       
       if time in time_to_before_expression:
-        time_before_expression = time_to_before_expression[time]
-        book_clocks_before = search_google_books(time_before_expression)
-        book_clocks.extend(book_clocks_before)
+        time_before_expression_arr = time_to_before_expression[time]
+        for time_before_expression in time_before_expression_arr:
+          book_clocks_before = search_google_books(time_before_expression)
+          book_clocks.extend(book_clocks_before)
       
-      book_clocks.extend(book_clocks_past)
       
       with open("new_google_times.csv", "a") as f2:
         for book in book_clocks:
