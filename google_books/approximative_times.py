@@ -44,10 +44,13 @@ for hour in range(0, 13):
 
     if (minute == 15):
         approx_expressions[time].append({'expression': f"almost+quarter+past+{hours_words[hour]}", 'approximation': 'any'})
+        approx_expressions[time].append({'expression': f"around+quarter+past+{hours_words[hour]}", 'approximation': 'any'})
     if (minute == 30):
         approx_expressions[time].append({'expression': f"almost+half+past+{hours_words[hour]}", 'approximation': 'any'})
+        approx_expressions[time].append({'expression': f"around+half+past+{hours_words[hour]}", 'approximation': 'any'})
     if (minute == 45 and hour < 12):
         approx_expressions[time].append({'expression': f"almost+quarter+to+{hours_words[hour + 1]}", 'approximation': 'any'})
+        approx_expressions[time].append({'expression': f"around+quarter+to+{hours_words[hour + 1]}", 'approximation': 'any'})
     
     
 
@@ -163,6 +166,9 @@ def search_google_books(time_str, approximation, startIdx=0, maxResults=40):
 
     TIME.sleep(1)
     return results
+  
+# results = search_google_books("around+half+past+midnight", "any")
+# print(results)
 
 with open("approximate_times.txt") as f:
     for line in f:
